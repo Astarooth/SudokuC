@@ -3,7 +3,6 @@
 #include <stdbool.h>
 #include <windows.h>
 
-#include "commande.h"
 #include "color.h"
 #include "sudoku.h"
 #include "interactionConsole.h"
@@ -79,7 +78,18 @@ void Sudoku_end(Sudoku* SUDOKU){
     free(SUDOKU);
 }
 
-void afficher(const Sudoku* SUDOKU){
+void afficher_case(const Case* c){
+    HANDLE hconsole = GetStdHandle(STD_OUTPUT_HANDLE);
+
+    if(c->modifiable)
+        SetConsoleTextAttribute(hconsole,BLANC);
+    else
+        SetConsoleTextAttribute(hconsole,GRIS_FONCE);
+
+    printf(" %d ",c->value);
+}
+
+void afficher_grille(const Sudoku* SUDOKU){
     //Gestion de la couleurs
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 
@@ -110,13 +120,9 @@ void afficher(const Sudoku* SUDOKU){
                 printf("|");
             }
 
-            if(SUDOKU->grille[i][j]->modifiable){
-                SetConsoleTextAttribute(hConsole,BLANC);
-            }
-            else{
-                SetConsoleTextAttribute(hConsole,GRIS_FONCE);
-            }
-            printf(" %d ",SUDOKU->grille[i][j]->value);
+            afficher_case(SUDOKU->grille[i][j]);
+
+
         }
         SetConsoleTextAttribute(hConsole,BLEU_CLAIR);
         printf("|\n");
@@ -201,4 +207,47 @@ void getPosFromCase3_3(const int num_case,int tab_retour[9]){
             tab_retour[i*3+j] = 9*(((int)num_case/3)*3+i)+j+((num_case%3)*3);
         }
     }
+}
+
+Sudoku* chargeSudokuFromFile(const char* chemain){
+    FILE* alire;
+    Sudoku* SUDOKU;
+    SUDOKU = new_Sudoku();
+    char c = ' ';
+    int i=0,j=0;
+
+
+    alire = fopen(chemain,"r");
+    if(alire == NULL){
+        HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+        SetConsoleTextAttribute(hConsole,ROUGE_CLAIR);
+        printf("Fichier inexistant\n");
+        return NULL;
+    }
+    else{
+        while((c = fgetc(alire)) != EOF){
+            if(c != '\n'){
+                int c_int = c - '0';
+                Case* nc = new_Case();
+
+                //Set des valeurs d'une case
+                nc->value = c_int;
+                if(c_int == 0){
+                    nc->modifiable = true;
+                }
+                else
+                    nc->modifiable = false;
+
+                //Mise de la case dans la grille
+                SUDOKU->grille[i%9][j%9] = nc;
+                if(j%9 == 8)
+                    i++;
+                j++;
+            }
+        }
+    }
+
+    fclose(alire);
+
+    return SUDOKU;
 }

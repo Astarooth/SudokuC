@@ -54,12 +54,14 @@ void Sudoku_end(Sudoku* SUDOKU);
  * \return : void
  *
  */
-void afficher(const Sudoku* SUDOKU);
+void afficher_grille(const Sudoku* SUDOKU);
+void afficher_case(const Case* c);
 bool solveur(const Sudoku* SUDOKU);
 bool juste(int tableau[9]);
 int compare(const void* a, const void*b);
 int tabIndex(const int tableau[9], const int search_int);
 void getPosFromCase3_3(const int num_case,int tab_retour[9]);
 
+Sudoku* chargeSudokuFromFile(const char* chemain);
 
 #endif // SUDOKU_H_INCLUDED

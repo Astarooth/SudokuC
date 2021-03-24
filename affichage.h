@@ -11,13 +11,18 @@ void titre(const char* titre);
 void menuPrincipale(void);
 void listeGrille(void);
 void function_play(void);
+void center(const char* texte_centrer);
 
 void affichage_chargeGrille(void);
 
-void rules(const char* ecran);
-void back(const char* ecran);
+void rules(void);
+int back(int* screen);
 void quit(void);
-void charge(void);
+void lister_grille(void);
+void print(const char* name_file);
+void print_screen(const int screen);
+void listerCmd(const int nbr_elem, char* tableauCmd[]);
+
 
 
 #endif // AFFICHAGE_H_INCLUDED

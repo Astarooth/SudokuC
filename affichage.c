@@ -1,9 +1,11 @@
 #include <stdio.h>
 #include <windows.h>
 #include <dirent.h>
+#include <stdbool.h>
 
 #include "saisie.h"
 #include "affichage.h"
+#include "sudoku.h"
 
 #define COLONNE 47
 #define LIGNE 75
@@ -28,6 +30,12 @@ void ligneLimite(const int lenght){
     }
 }
 
+void ligneLimite_c(const int lenght, const char c){
+    for(int i=0;i<lenght;i++){
+        printf("%c",c);
+    }
+}
+
 void titre(const char* titre){
     int size = strlen(titre);
     ligne();
@@ -42,69 +50,26 @@ void titre(const char* titre){
     printf("\n");
 }
 
+void center(const char* texte_centrer){
+    int size = strlen(texte_centrer);
+    ligneLimite_c((COLONNE-size)/2,' ');
+    printf("%s",texte_centrer);
+
+    if((COLONNE - size)%2 != 0)
+        ligneLimite_c(((COLONNE-size)/2)+1,' ');
+    else
+        ligneLimite_c(((COLONNE-size)/2),' ');
+    printf("\n\n");
+}
+
 void consoleParam(void){
     SetConsoleTitle("SUDOKU");
     system("mode con lines=75 cols=47");
 }
 
 ///Fonction d'affcihage des ecrans
-void introduction(void){
-    consoleParam();
-    system("cls");
 
-    titre(" Bienvenue dans le jeu du SUDOKU ! ");
-    ligne();
-    printf(" Coder par Maxime KUGLER et Thomas ARONICA.\n\n Bonne chance !\n\n");
-    ligne();
-    printf("\n");
-
-    char* cmdTemp = saisie_parmis_cmd(4,"quit","play","charge","rules");
-
-    char cmd[strlen(cmdTemp)];
-    strcpy(cmd,cmdTemp);
-    free(cmdTemp);
-
-    gestionnaireCmd(getIndCmd(cmd),"introduction");
-
-
-}
-
-void rules(const char* ecran){
-    system("cls");
-    titre(" Regle du sudoku ");
-    printf(" Vous devez completer une grille de 9 par 9.\n Pour se faire vous devez placer des chiffres   de 1 a 9.\n Mais il ne peut y avoir qu'un seul chiffres    identique dans chaque ligne, colonne et case   de 3 par 3.\n");
-    ligne();
-
-    char* cmdTemp = saisie_parmis_cmd(1,"back");
-    char cmd[strlen(cmdTemp)];
-    strcpy(cmd,cmdTemp);
-    free(cmdTemp);
-
-    switch(getIndCmd(cmd)){
-    case -1:
-        break;
-    case 6 : //back
-        back(ecran);
-        break;
-    default :
-        break;
-    }
-}
-
-void back(const char* ecran){
-    if(strcmp(ecran,"introduction")==0)
-        introduction();
-    else if(strcmp(ecran,"charge") == 0)
-        charge();
-}
-
-void quit(void){
-    system("exit");
-}
-
-void charge(void){
-    system("cls");
-    titre(" Liste des grilles ");
+void lister_grille(void){
 
     //On ouvre le repertoire
     DIR* grille_dir = opendir("Grille/");
@@ -130,17 +95,37 @@ void charge(void){
     }
 
     ligne();
+
     printf("\n");
 
-    char* cmdTemp = saisie_parmis_cmd(4,"print","play","back","quit");
-    char cmd[strlen(cmdTemp)];
-    strcpy(cmd,cmdTemp);
-    free(cmdTemp);
+    closedir(grille_dir);
+}
 
-    gestionnaireCmd(getIndCmd(cmd),"introduction");
+void play(void){
+    printf("play");
+}
+
+void print(const char* name_file){
+    Sudoku* SUDOKU = new_Sudoku();
+
+    SUDOKU = chargeSudokuFromFile(concat("Grille/", name_file));
+
+    if(SUDOKU != NULL){
+        afficher_grille(SUDOKU);
+
+        Sudoku_end(SUDOKU);
+    }
 }
 
 
+void listerCmd(const int nbr_elem, char* tableauCmd[]){
+    printf("Liste des commandes autorise : \n");
+    for(int i=0;i<nbr_elem;i++){
+        printf(" - %s\n",tableauCmd[i]);
+    }
+    printf(" - man [commande] : afficher le manuel\n\n");
+    ligne();
+}
 
 
 

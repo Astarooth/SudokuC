@@ -8,85 +8,67 @@
 #include "saisie.h"
 #include "color.h"
 #include "affichage.h"
+#include "ecran.h"
 
-#define NBR_CMD 8
+#define NBR_CMD 11
 
 const char* listeCmd[NBR_CMD*2] =  {"quit",                 "quitte le jeu",
-                                    "play",
-                                    "lance un grille",
+                                    "play",                 "joue une partie aléatoire",
+                                    "lance",                "[nom_fichier] joue la grille séléctionner",
                                     "charge",               "liste les grilles",
                                     "rules",                "affiche les regles du jeu",
                                     "save",                 "sauvegarde la grille",
                                     "man",                  "affiche le manuel",
                                     "back",                 "retour a l'écran précédent",
-                                    "print",                "affiche une grille de sudoku"
+                                    "print",                "affiche une grille de sudoku",
+                                    "set",                  "[chiffre] [colonne] [ligne] place un chiffre dans la case souhaité",
+                                    "clear",                "efface les commandes saisies"
                                     };
 
 
-char* saisie_parmis_cmd(const int varnb, ...){
+
+char* saisie_parmis_cmd(const int nbr_elem, char* tableauCmd[]){
     //Déclarations des variables
-    char* param[varnb];
-    va_list listeParm;
-    va_start(listeParm, varnb);
     bool BonneSaisie = false ;
-
     const HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-
-    //initialisations des variables et affichage des chaines de caractere autorise
-    printf("Liste des commandes autorise : \n");
-    for(int i=0;i<varnb;i++){
-        param[i] = (char*)va_arg(listeParm,char*);
-        printf(" - %s\n",param[i]);
-    }
-    printf(" - man [commande] : afficher le manuel\n\n");
 
     //Déclarations de la variables de saisie utilisateurs qui ne peut être > a la taille max des commandes autorisé
     int size = 0;
-    for(int i=0;i<varnb;i++){
-        if(strlen(param[i])>size)
-            size = strlen(param[i]);
+    for(int i=0;i<nbr_elem;i++){
+        if(strlen(tableauCmd[i])>size)
+            size = strlen(tableauCmd[i]);
     }
+
     char* saisie = (char*)malloc((size+4)*sizeof(char));
+
     if(saisie == NULL){
         exit(1);
     }
 
-    do{
+
+    while(!BonneSaisie){
         SetConsoleTextAttribute(hConsole,VERT_CLAIR);
         printf("#: ");
         scanf("%s",saisie);
         SetConsoleTextAttribute(hConsole,BLANC);
 
-        if(strcmp(saisie,"man")==0){
+        if(strcmp("man",saisie) == 0){
             scanf("%s",saisie);
             man(saisie);
         }
-        else {
-            for(int i=0;i<varnb;i++){
-                if(strcmp(param[i],saisie)== 0){
+        else{
+            for(int i=0;i<nbr_elem;i++){
+                if(strcmp(tableauCmd[i],saisie)== 0){
                     BonneSaisie = true;
                 }
             }
+            if(!BonneSaisie){
+                SetConsoleTextAttribute(hConsole,ROUGE);
+                printf("Erreur : commande non admise\n");
+            }
         }
-
-    }while(!BonneSaisie);
-
-
-    va_end(listeParm);
+    }
     return saisie;
-}
-
-void man(const char* cmd){
-    const HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-
-    int indice = getInd(cmd,listeCmd,NBR_CMD*2);
-    if(indice != -1 && indice< NBR_CMD*2-1){
-        printf(" %s : %s\n",listeCmd[indice],listeCmd[indice+1]);
-    }
-    else{
-        SetConsoleTextAttribute(hConsole,ROUGE);
-        printf(" man error : unkown command\n");
-    }
 }
 
 int getInd(const char* searched, const char* liste[], const int size){
@@ -124,40 +106,83 @@ char* substring(char* string, const unsigned int position, const unsigned int le
     return retour;
 }
 
-void gestionnaireCmd(const int position, const char* ecran){
-    printf("%d",position);
-    switch(position){
-    case -1 :   // la cmd chercher n'est pas dans la liste
-        break;
-    case 0 :    //quit
-        quit();
-        break;
-    case 1 :    //play
-        play();
-        break;
-    case 2 :    //charge
-        charge();
-        break;
-    case 3 :    //rules
-        rules(ecran);
-        break;
-    case 4 :    //save
-        break;
-    case 6 :    //back
-        back(ecran);
-        break;
-    case 7 :    //print
-        print();
-        break;
-    default :
-        break;
+char* concat(const char* str1, const char* str2){
+
+    char* retour = (char*)malloc((strlen(str1) + strlen(str2) + 1) * sizeof(char));
+
+    if(retour == NULL)
+        exit(1);
+
+    for(int i=0;i<strlen(str1);i++){
+        retour[i] = str1[i];
+    }
+
+    for(int i=0;i<strlen(str2);i++){
+        retour[strlen(str1)+i] = str2[i];
+    }
+
+    retour[strlen(str1)+strlen(str2)] = '\0';
+
+    return retour;
+}
+
+void trim(char* str){
+    for(int i=0;i<strlen(str);i++){
+        if(str[i] == ' '){
+            str[i] = str[i+1];
+        }
     }
 }
 
-void play(void){
-    printf("play");
+
+void man(const char* cmd){
+    const HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+
+    int indice = getInd(cmd,listeCmd,NBR_CMD*2);
+    //la commande est dans la liste
+    if(indice != -1 && indice< NBR_CMD*2-1){
+        printf(" %s : %s\n",listeCmd[indice],listeCmd[indice+1]);
+    }
+    //la commande n'est pas dans la liste
+    else{
+        SetConsoleTextAttribute(hConsole,ROUGE);
+        printf(" man error : unkown command\n");
+    }
 }
 
-void print(void){
-    printf("print");
+void initTabCmd(char* tableauCmd[],const int nbrElem, const char* nom){
+    if(strcmp("introduction",nom) == 0){
+        tableauCmd[0] = "quit";
+        tableauCmd[1] = "play";
+        tableauCmd[2] = "charge";
+        tableauCmd[3] = "rules";
+        tableauCmd[4] = "clear";
+    }
+    else if(strcmp("rules",nom) == 0){
+        tableauCmd[0] = "quit";
+        tableauCmd[1] = "back";
+        tableauCmd[2] = "clear";
+    }
+    else if(strcmp("charge",nom) == 0){
+        tableauCmd[0] = "quit";
+        tableauCmd[1] = "back";
+        tableauCmd[1] = "lance";
+        tableauCmd[1] = "print";
+        tableauCmd[1] = "rules";
+        tableauCmd[1] = "clear";
+
+    }
 }
+
+int getNbrCommandePermise(const char* nom){
+    int n = 0;
+    if(strcmp("introduction",nom) == 0)
+        n=5;
+    else if(strcmp("rules",nom) == 0)
+        n=3;
+    else if(strcmp("charge",nom) == 0)
+        n=6;
+    return n;
+}
+
+
